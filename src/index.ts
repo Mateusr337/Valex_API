@@ -2,13 +2,13 @@ import express, { json } from "express";
 import "express-async-errors";
 import cors from 'cors';
 import dotenv from 'dotenv';
-dotenv.config();
 import * as errors from "./utils/errorFunctions.js";
+dotenv.config();
 
 
 import router from "./routes/index.js";
 
-const app = express();
+const app = express()
 app.use(cors());
 app.use(json());
 

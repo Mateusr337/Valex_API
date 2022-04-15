@@ -1,13 +1,21 @@
 import { Request, Response } from "express";
-import * as cardsService from "../services/cardsService.js";
 import * as companyService from "../services/companyService.js";
+import * as cardsService from "../services/cardsService.js";
 
-export function createcards (req: Request, res: Response) {
+export async function createCards (req: Request, res: Response) {
 
     const apiKey = req.headers['x-api-key'].toString();
-    const { cardType } = req.body;
+    const { cardFlag } = req.body;
 
-    companyService.validateApiKeys(apiKey);
+    await companyService.validateApiKeys(apiKey);
+    await cardsService.createCards(req.body, cardFlag);
+
+    res.sendStatus(201);
+}
+
+export async function activateCard (req: Request, res: Response) {
+
+    
 
     res.sendStatus(201);
 }

@@ -25,7 +25,7 @@ export interface Card {
 export type CardInsertData = Omit<Card, "id">;
 export type CardUpdateData = Partial<Card>;
 
-export async function find() {
+export async function find () {
   const result = await connection.query<Card>("SELECT * FROM cards");
   return result.rows;
 }
@@ -40,7 +40,7 @@ export async function findById(id: number) {
 }
 
 export async function findByTypeAndEmployeeId(
-  type: TransactionTypes,
+  type: any,
   employeeId: number
 ) {
   const result = await connection.query<Card, [TransactionTypes, number]>(
@@ -62,6 +62,18 @@ export async function findByCardDetails(
       FROM cards 
       WHERE number=$1 AND "cardholderName"=$2 AND "expirationDate"=$3`,
     [number, cardholderName, expirationDate]
+  );
+
+  return result.rows[0];
+}
+
+export async function findByCardNumber(number: string) {
+  const result = await connection.query(
+    ` SELECT 
+        * 
+      FROM cards 
+      WHERE number=$1`,
+    [number]
   );
 
   return result.rows[0];
