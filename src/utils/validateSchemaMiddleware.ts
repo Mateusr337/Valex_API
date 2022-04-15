@@ -10,8 +10,7 @@ function validateSchemaMiddleware(schema) {
 
         if (validation.error) {
             const errorsMessage = validation.error.details.map(detail => detail.message);
-            console.log(errorsMessage);
-            // throw errors.badRequestError(errorsMessage);
+            throw errors.badRequestError(errorsMessage.join('; '));
         }
 
         next();

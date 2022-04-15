@@ -4,7 +4,7 @@ import * as employeesRepository from "../repositories/employeeRepository.js";
 import * as errors from "../utils/errorFunctions.js";
 import validateId from '../utils/validateEmployeeId.js';
 import dayjs from 'dayjs';
-import encryptData from '../utils/encryptFunction.js';
+import * as encryptFunction from '../utils/encryptFunction.js';
 
 
 export async function createCards(
@@ -35,6 +35,42 @@ export async function createCards(
         isBlocked: true,
         type,
     });
+}
+
+export async function activateCards (
+    password: string,
+    cardId: number,
+    CVC: string,
+) {
+
+    validatePassword(password);
+    await validateCardToActivate(cardId, CVC);
+    const passwordEncrypted = encryptFunction.encryptData(password);
+    await cardRepository.update(
+        cardId, 
+        {
+            password: passwordEncrypted,
+            isBlocked: false,
+        }
+    );
+}
+
+function validatePassword(password: string) {
+    const verify = /^[0-9]{4}$/.test(password);
+    if (!verify) throw errors.badRequestError('password must have 4 numbers');
+}
+
+async function validateCardToActivate (id: number, CVC: string) {
+    const cardFound = await cardRepository.findById(id);
+    if (!cardFound) throw errors.notFoundError('card');
+
+    const match = await encryptFunction.compareEncrypted(CVC, cardFound.securityCode);
+    if (!match) throw errors.unauthorizedError('creditCard'); 
+
+    const dateToday = `${dayjs().format('MM')}/${dayjs().format('YY')}`;
+    if (cardFound.expirationDate < dateToday) throw errors.unauthorizedError('creditCard');
+
+    if (cardFound.password) throw errors.unauthorizedError('creditCardId');
 }
 
 function validateVirtualCard(isVirtual: boolean, originalCardId: number) {
@@ -75,7 +111,7 @@ async function createHandleCardData(cardFlag: string) {
         existCreditCard = await cardRepository.findByCardNumber(creditCard.cardNumber);
     } while (existCreditCard);
 
-    creditCard.securityCode = encryptData(creditCard.securityCode);
+    creditCard.securityCode = encryptFunction.encryptData(creditCard.securityCode);
 
     return creditCard;
 }

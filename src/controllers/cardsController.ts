@@ -15,7 +15,12 @@ export async function createCards (req: Request, res: Response) {
 
 export async function activateCard (req: Request, res: Response) {
 
-    
+    const {
+        password,
+        cardId,
+        CVC
+    } = req.body;
 
+    await cardsService.activateCards(password, cardId, CVC);
     res.sendStatus(201);
 }

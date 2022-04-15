@@ -7,7 +7,7 @@ import validateSchemaMiddleware from '../utils/validateSchemaMiddleware.js';
 const cardsRouter = Router();
 
 cardsRouter.post('/cards', validateSchemaMiddleware(cardSchema), cardController.createCards);
-cardsRouter.post('/cards/:cardId/activate', validateSchemaMiddleware(activateCardSchema), cardController.activateCard);
+cardsRouter.patch('/cards/:cardId/activate', validateSchemaMiddleware(activateCardSchema), cardController.activateCard);
 
 
 export default cardsRouter;
