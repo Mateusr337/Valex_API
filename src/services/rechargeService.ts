@@ -1,6 +1,7 @@
 import * as rechargeRepository from "../repositories/rechargeRepository.js";
 import * as errors from "../utils/errorFunctions.js";
-import validateIsCardActive from "../utils/validateIsCardActive.js";
+import * as cardService from "../services/cardsService.js";
+
 
 
 export async function insertRecharge (
@@ -9,7 +10,7 @@ export async function insertRecharge (
 ) {
     if (amount <= 0) throw errors.badRequestError('amount must be greater than zero');
 
-    await validateIsCardActive(cardId, false);
+    await cardService.validateIsCardActive(cardId, false);
     
     await rechargeRepository.insert({cardId, amount});
 }

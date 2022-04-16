@@ -3,7 +3,6 @@ import * as paymentRepository from "../repositories/paymentRepository.js";
 import * as cardService from "../services/cardsService.js";
 import * as encryptFunctions from "../utils/encryptFunction.js";
 import * as errors from "../utils/errorFunctions.js";
-import validateIsCardActive from "../utils/validateIsCardActive.js";
 import * as cardRepository from './../repositories/cardRepository.js';
 
 
@@ -19,7 +18,7 @@ export async function insertPayments(
 
     if (amount <= 0) throw errors.badRequestError('"amount" must be greater than zero');
 
-    await validateIsCardActive(cardId, false);
+    await cardService.validateIsCardActive(cardId, false);
     await validatePassword(password, cardId);
     await validateBusinessAndType(businessId, cardId);
 
