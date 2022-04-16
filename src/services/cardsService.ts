@@ -173,3 +173,20 @@ async function validateCardType(type: cardRepository.TransactionTypes, employeeI
     if (hasCardThisType) throw errors.badRequestError('Type card already exist to this employee');
 }
 
+export async function findByCardDetails (
+    cardData: cardRepository.CardDataToOnlinePayment,
+) {
+    const {
+        number,
+        cardholderName,
+        expirationDate,
+    } = cardData;
+
+    const foundCard = await cardRepository.findByCardDetails(
+        number,
+        cardholderName,
+        expirationDate,
+    );
+    return foundCard;
+}
+

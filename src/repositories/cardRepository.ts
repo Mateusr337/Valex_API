@@ -21,6 +21,12 @@ export interface Card {
   isBlocked: boolean;
   type: TransactionTypes;
 }
+export interface CardDataToOnlinePayment {
+  number: string;
+  cardholderName: string;
+  securityCode: string;
+  expirationDate: string;
+}
 
 export type CardInsertData = Omit<Card, "id">;
 export type CardUpdateData = Partial<Card>;

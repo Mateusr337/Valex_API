@@ -7,6 +7,7 @@ export function errorHandlingMiddleware (error: any, req: Request, res: Response
     if (error.type === "bad_request") return res.status(422).send(error.message);
     if (error.type === "unauthorized") return res.status(401).send(error.message);
 
+    console.log(error.message);
     return res.sendStatus(500);
 }
 
