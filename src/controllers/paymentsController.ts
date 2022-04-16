@@ -4,8 +4,17 @@ import * as paymentsService from "../services/paymentsService.js";
 
 export async function insertPayments (req: Request, res: Response) {
 
-    const { password } = req.body;
+    const {
+        password, 
+        cardData
+    } = req.body;
 
-    await paymentsService.insertPayments(req.body, password);
+    const payment = {
+        amount: req.body.amount,
+        businessId: req.body.businessId,
+        cardId: req.body.cardId,
+    };
+
+    await paymentsService.insertPayments(payment, password, cardData);
     res.sendStatus(201);
 }
