@@ -1,6 +1,8 @@
 import { faker } from '@faker-js/faker';
 import * as cardRepository from './../repositories/cardRepository.js';
 import * as employeesRepository from "../repositories/employeeRepository.js";
+import * as paymentsRepository from "../repositories/paymentRepository.js";
+import * as rechargesRepository from "../repositories/rechargeRepository.js";
 import * as errors from "../utils/errorFunctions.js";
 import validateId from '../utils/validateEmployeeId.js';
 import dayjs from 'dayjs';
@@ -18,7 +20,7 @@ export async function createCards(
     cardFlag: string,
 ) {
 
-    validateId(employeeId);
+    await validateId(employeeId);
     await validateCardType(type, employeeId);
     validateVirtualCard(isVirtual, originalCardId);
 
@@ -58,12 +60,45 @@ export async function activateCards (
     );
 }
 
+export async function getCardById (cardId: number) {
+
+    await validateIsCardActive(cardId, false);
+
+    const transactions: paymentsRepository.Payment[] = await paymentsRepository.findByCardId(cardId);
+    const recharges: rechargesRepository.Recharge[] = await rechargesRepository.findByCardId(cardId);
+    
+    const balance: number = balanceCalculator(recharges, transactions);
+
+    return {
+        balance,
+        transactions,
+        recharges,
+    };
+}
+
+function balanceCalculator(
+    recharges: rechargesRepository.Recharge[], 
+    payments: paymentsRepository.Payment[],
+) {
+    const rechargesAmount: number = recharges.reduce((rechargesAmount, recharge) => (
+        rechargesAmount + recharge.amount
+    ), 0);
+
+    const paymentsAmount: number = payments.reduce((paymentsAmount, payment) => (
+        paymentsAmount + payment.amount
+    ), 0);
+
+    return rechargesAmount - paymentsAmount;
+}
+
 function validatePassword(password: string) {
+
     const verify = /^[0-9]{4}$/.test(password);
     if (!verify) throw errors.badRequestError('password must have 4 numbers');
 }
 
 async function validateCVC (id: number, CVC: string) {
+
     const cardFound = await cardRepository.findById(id);
     if (!cardFound) throw errors.notFoundError('card');
 
@@ -72,6 +107,7 @@ async function validateCVC (id: number, CVC: string) {
 }
 
 function validateVirtualCard(isVirtual: boolean, originalCardId: number) {
+
     if (isVirtual || originalCardId) {
         if (!isVirtual || !originalCardId) {
             throw errors.badRequestError(`if it is a virtual card it must have "isVirtual"(true) and "originalCardId"`);
@@ -80,6 +116,7 @@ function validateVirtualCard(isVirtual: boolean, originalCardId: number) {
 }
 
 async function formatNameUserById (id: number) {
+
     const { fullName } = await employeesRepository.findById(id);
     const arrayNames = fullName.split(' ').filter(name => name.length >= 3);
 
@@ -93,6 +130,7 @@ async function formatNameUserById (id: number) {
 }
 
 async function createHandleCardData(cardFlag: string) {
+
     let existCreditCard: string;
     let creditCard: any;
 
