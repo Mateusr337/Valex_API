@@ -6,10 +6,19 @@ import * as cardRepository from "../repositories/cardRepository.js";
 export async function createCards (req: Request, res: Response) {
 
     const apiKey = req.headers['x-api-key'].toString();
-    const { cardFlag } = req.body;
+    const { type, employeeId } = req.body;
 
     await companyService.validateApiKeys(apiKey);
-    await cardsService.createCards(req.body, cardFlag);
+    await cardsService.createCards(type, employeeId);
+
+    res.sendStatus(201);
+}
+
+export async function createVirtualCard (req: Request, res: Response) {
+
+    const { id, password } = req.body;
+
+    await cardsService.createVirtualCard(id, password);
 
     res.sendStatus(201);
 }
@@ -41,4 +50,13 @@ export async function blockUnlockCard (req: Request, res: Response) {
     await cardsService.blockUnlockCard(id, password, block);
 
     res.sendStatus(201);
+}
+
+export async function deleteCard (req: Request, res: Response) {
+
+    const { id, password } = req.body;
+
+    await cardsService.deleteCards(id, password);
+
+    res.sendStatus(200);
 }

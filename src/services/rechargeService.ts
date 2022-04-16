@@ -11,6 +11,8 @@ export async function insertRecharge (
     if (amount <= 0) throw errors.badRequestError('amount must be greater than zero');
 
     const card = await cardService.findCardById(cardId);
+    if (card.isVirtual) errors.unauthorizedError("card");
+    
     await cardService.validateIsCardActive(card, false);
     await rechargeRepository.insert({cardId, amount});
 }
