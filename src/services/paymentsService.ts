@@ -1,12 +1,16 @@
 import * as businessRepository from "../repositories/businessRepository.js";
 import * as paymentRepository from "../repositories/paymentRepository.js";
+import * as cardService from "../services/cardsService.js";
 import * as encryptFunctions from "../utils/encryptFunction.js";
 import * as errors from "../utils/errorFunctions.js";
 import validateIsCardActive from "../utils/validateIsCardActive.js";
 import * as cardRepository from './../repositories/cardRepository.js';
 
 
-export async function insertPayments(payment: paymentRepository.Payment, password: string) {
+export async function insertPayments(
+    payment: paymentRepository.Payment, 
+    password: string,
+) {
     const {
         cardId,
         amount,
@@ -18,6 +22,9 @@ export async function insertPayments(payment: paymentRepository.Payment, passwor
     await validateIsCardActive(cardId, false);
     await validatePassword(password, cardId);
     await validateBusinessAndType(businessId, cardId);
+
+    const { balance } = await cardService.getCardById(cardId);
+    if (balance < amount) throw errors.badRequestError("insufficient balance");
 
     await paymentRepository.insert({ cardId, businessId, amount });
 }

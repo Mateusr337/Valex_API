@@ -40,7 +40,7 @@ export async function findById(id: number) {
 }
 
 export async function findByTypeAndEmployeeId(
-  type: any,
+  type: TransactionTypes,
   employeeId: number
 ) {
   const result = await connection.query<Card, [TransactionTypes, number]>(
