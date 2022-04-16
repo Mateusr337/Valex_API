@@ -5,6 +5,7 @@ import * as errors from "../utils/errorFunctions.js";
 import validateId from '../utils/validateEmployeeId.js';
 import dayjs from 'dayjs';
 import * as encryptFunction from '../utils/encryptFunction.js';
+import validateIsCardActive from '../utils/validateIsCardActive.js';
 
 
 export async function createCards(
@@ -42,10 +43,12 @@ export async function activateCards (
     cardId: number,
     CVC: string,
 ) {
-
     validatePassword(password);
-    await validateCardToActivate(cardId, CVC);
+    await validateIsCardActive(cardId, true);
+    await validateCVC(cardId, CVC);
+
     const passwordEncrypted = encryptFunction.encryptData(password);
+
     await cardRepository.update(
         cardId, 
         {
@@ -60,17 +63,12 @@ function validatePassword(password: string) {
     if (!verify) throw errors.badRequestError('password must have 4 numbers');
 }
 
-async function validateCardToActivate (id: number, CVC: string) {
+async function validateCVC (id: number, CVC: string) {
     const cardFound = await cardRepository.findById(id);
     if (!cardFound) throw errors.notFoundError('card');
 
     const match = await encryptFunction.compareEncrypted(CVC, cardFound.securityCode);
-    if (!match) throw errors.unauthorizedError('creditCard'); 
-
-    const dateToday = `${dayjs().format('MM')}/${dayjs().format('YY')}`;
-    if (cardFound.expirationDate < dateToday) throw errors.unauthorizedError('creditCard');
-
-    if (cardFound.password) throw errors.unauthorizedError('creditCardId');
+    if (!match) throw errors.unauthorizedError('creditCard');
 }
 
 function validateVirtualCard(isVirtual: boolean, originalCardId: number) {
