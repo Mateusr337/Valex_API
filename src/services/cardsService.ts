@@ -60,6 +60,8 @@ export async function activateCards (
     CVC: string,
 ) {
     const card = await findCardById(cardId);
+    if (card.isVirtual) throw errors.unauthorizedError("card");
+
     validatePasswordLength(password);
     await validateIsCardActive(card, true);
     await encryptFunction.compareEncrypted(CVC, card.securityCode);
@@ -194,5 +196,17 @@ export async function findByCardDetails (
         expirationDate,
     );
     return foundCard;
+}
+
+export async function deleteCards (
+    id: number,
+    password: string,
+) {
+    const card = await findCardById(id);
+
+    if (!card.isVirtual) throw errors.unauthorizedError("card");
+    encryptFunction.compareEncrypted(password, card.password);
+    
+    await cardRepository.remove(id);
 }
 

@@ -51,3 +51,12 @@ export async function blockUnlockCard (req: Request, res: Response) {
 
     res.sendStatus(201);
 }
+
+export async function deleteCard (req: Request, res: Response) {
+
+    const { id, password } = req.body;
+
+    await cardsService.deleteCards(id, password);
+
+    res.sendStatus(200);
+}
