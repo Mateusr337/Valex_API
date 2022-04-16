@@ -10,7 +10,7 @@ export async function insertRecharge (
 ) {
     if (amount <= 0) throw errors.badRequestError('amount must be greater than zero');
 
-    await cardService.validateIsCardActive(cardId, false);
-    
+    const card = await cardService.findCardById(cardId);
+    await cardService.validateIsCardActive(card, false);
     await rechargeRepository.insert({cardId, amount});
 }

@@ -1,10 +1,9 @@
 import * as employeesRepository from "../repositories/employeeRepository.js";
 import * as errors from "../utils/errorFunctions.js";
 
-export async function formatNameUserById(id: number) {
+export async function formatNameUserById(employee: employeesRepository.Employee) {
 
-    const { fullName } = await employeesRepository.findById(id);
-    const arrayNames = fullName.split(' ').filter(name => name.length >= 3);
+    const arrayNames = employee.fullName.split(' ').filter(name => name.length >= 3);
 
     const cardName = arrayNames.map((name, i) => {
         if (i === 0 || i === arrayNames.length - 1) return name;
@@ -15,10 +14,10 @@ export async function formatNameUserById(id: number) {
     return formattedName;
 }
 
-export async function validateEmployeeById(id: number) {
-    if (id < 0 || typeof (id) !== "number") {
-        throw errors.badRequestError('id');
-    }
+export async function findEmployeeById(id: number) {
+
     const employee = await employeesRepository.findById(id);
     if (!employee) throw errors.notFoundError("employee");
+
+    return employee;
 }

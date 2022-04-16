@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as companyService from "../services/companyService.js";
 import * as cardsService from "../services/cardsService.js";
+import * as cardRepository from "../repositories/cardRepository.js";
 
 export async function createCards (req: Request, res: Response) {
 
@@ -28,7 +29,16 @@ export async function activateCard (req: Request, res: Response) {
 export async function getCardById (req: Request, res: Response) {
 
     const cardId: number = parseInt(req.params.cardId);
-    const cardData: any = await cardsService.getCardById(cardId);
+    const cardData: any = await cardsService.getCardOperationsById(cardId);
 
     res.send(cardData || {});
+}
+
+export async function blockUnlockCard (req: Request, res: Response) {
+
+    const { password, id }: cardRepository.CardUpdateData = req.body;
+    const { block } = req.params;
+    await cardsService.blockUnlockCard(id, password, block);
+
+    res.sendStatus(201);
 }
