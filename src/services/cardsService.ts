@@ -11,21 +11,13 @@ import validatePasswordLength from '../utils/validatePasswordLength.js';
 
 
 export async function createCards(
-    {
-        type,
-        employeeId,
-        isVirtual,
-        originalCardId,
-    }: cardRepository.CardInsertData,
-    cardFlag: string,
+        type: cardRepository.TransactionTypes,
+        employeeId: number,
 ) {
-
     const employee = await employeeService.findEmployeeById(employeeId);
     await validateCardType(type, employeeId);
-    validateVirtualCard(isVirtual, originalCardId);
 
-    if (cardFlag.toLowerCase() !== "mastercard") throw errors.badRequestError("cardFlag");
-    const creditCardData = await createHandleCardData(cardFlag);
+    const creditCardData = await createHandleCardData("mastercard");
     const cardholderName = await employeeService.formatNameUserById(employee);
 
     await cardRepository.insert({
@@ -33,10 +25,32 @@ export async function createCards(
         cardholderName,
         ...creditCardData,
         password: null,
-        isVirtual: isVirtual || false,
-        originalCardId: originalCardId || null,
+        isVirtual: false,
+        originalCardId: null,
         isBlocked: true,
         type,
+    });
+}
+
+export async function createVirtualCard(
+    id: number,
+    password: string,
+) {
+    const originalCard = await findCardById(id);
+    await encryptFunction.compareEncrypted(password, originalCard.password);
+
+    const creditCardData = await createHandleCardData("mastercard");
+    delete(originalCard.id)
+
+    await cardRepository.insert({
+        employeeId: originalCard.employeeId,
+        cardholderName: originalCard.cardholderName,
+        ...creditCardData,
+        password: originalCard.password,
+        isVirtual: true,
+        originalCardId: originalCard.id,
+        isBlocked: false,
+        type: originalCard.type,
     });
 }
 
@@ -114,14 +128,6 @@ export async function findCardById(id: number) {
     return cardFound;
 }
 
-function validateVirtualCard(isVirtual: boolean, originalCardId: number) {
-
-    if (isVirtual || originalCardId) {
-        if (!isVirtual || !originalCardId) {
-            throw errors.badRequestError(`if it is a virtual card it must have "isVirtual"(true) and "originalCardId"`);
-        }
-    }
-}
 
 async function createHandleCardData(cardFlag: string) {
 
