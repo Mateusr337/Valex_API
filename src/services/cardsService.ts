@@ -1,13 +1,13 @@
 import { faker } from '@faker-js/faker';
 import * as cardRepository from './../repositories/cardRepository.js';
-import * as employeesRepository from "../repositories/employeeRepository.js";
+import * as employeeService from "../services/employeeService.js";
 import * as paymentsRepository from "../repositories/paymentRepository.js";
 import * as rechargesRepository from "../repositories/rechargeRepository.js";
 import * as errors from "../utils/errorFunctions.js";
-import validateId from '../utils/validateEmployeeId.js';
 import dayjs from 'dayjs';
 import * as encryptFunction from '../utils/encryptFunction.js';
-import validateIsCardActive from '../utils/validateIsCardActive.js';
+import balanceCalculator from '../utils/balanceCalculator.js';
+import validatePasswordLength from '../utils/validatePasswordLength.js';
 
 
 export async function createCards(
@@ -20,13 +20,13 @@ export async function createCards(
     cardFlag: string,
 ) {
 
-    await validateId(employeeId);
+    await employeeService.validateEmployeeById(employeeId);
     await validateCardType(type, employeeId);
     validateVirtualCard(isVirtual, originalCardId);
 
     if (cardFlag.toLowerCase() !== "mastercard") throw errors.badRequestError("cardFlag");
     const creditCardData = await createHandleCardData(cardFlag);
-    const cardholderName = await formatNameUserById(employeeId);
+    const cardholderName = await employeeService.formatNameUserById(employeeId);
 
     await cardRepository.insert({
         employeeId,
@@ -45,7 +45,7 @@ export async function activateCards (
     cardId: number,
     CVC: string,
 ) {
-    validatePassword(password);
+    validatePasswordLength(password);
     await validateIsCardActive(cardId, true);
     await validateCVC(cardId, CVC);
 
@@ -76,27 +76,6 @@ export async function getCardById (cardId: number) {
     };
 }
 
-function balanceCalculator(
-    recharges: rechargesRepository.Recharge[], 
-    payments: paymentsRepository.Payment[],
-): number {
-    const rechargesAmount: number = recharges.reduce((rechargesAmount, recharge) => (
-        rechargesAmount + recharge.amount
-    ), 0);
-
-    const paymentsAmount: number = payments.reduce((paymentsAmount, payment) => (
-        paymentsAmount + payment.amount
-    ), 0);
-
-    return rechargesAmount - paymentsAmount;
-}
-
-function validatePassword(password: string) {
-
-    const verify = /^[0-9]{4}$/.test(password);
-    if (!verify) throw errors.badRequestError('password must have 4 numbers');
-}
-
 async function validateCVC (id: number, CVC: string) {
 
     const cardFound = await cardRepository.findById(id);
@@ -113,20 +92,6 @@ function validateVirtualCard(isVirtual: boolean, originalCardId: number) {
             throw errors.badRequestError(`if it is a virtual card it must have "isVirtual"(true) and "originalCardId"`);
         }
     }
-}
-
-async function formatNameUserById (id: number) {
-
-    const { fullName } = await employeesRepository.findById(id);
-    const arrayNames = fullName.split(' ').filter(name => name.length >= 3);
-
-    const cardName = arrayNames.map((name, i) => {
-        if (i === 0 || i === arrayNames.length -1) return name;
-        return name[0]; 
-    });
-
-    const formattedName = cardName.join(' ').toLocaleUpperCase();
-    return formattedName;
 }
 
 async function createHandleCardData(cardFlag: string) {
@@ -150,6 +115,16 @@ async function createHandleCardData(cardFlag: string) {
     creditCard.securityCode = encryptFunction.encryptData(creditCard.securityCode);
 
     return creditCard;
+}
+
+export async function validateIsCardActive(id: number, isActivation: boolean) {
+    const cardFound = await cardRepository.findById(id);
+    if (!cardFound) throw errors.notFoundError('card');
+
+    const dateToday = `${dayjs().format('MM')}/${dayjs().format('YY')}`;
+    if (cardFound.expirationDate < dateToday) throw errors.unauthorizedError('creditCard');
+
+    if (cardFound.password && isActivation) throw errors.unauthorizedError('creditCardId');
 }
 
 async function validateCardType(type: cardRepository.TransactionTypes, employeeId: number) {
