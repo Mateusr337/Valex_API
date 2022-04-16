@@ -16,7 +16,7 @@ export async function createCards(
         employeeId,
         isVirtual,
         originalCardId,
-    }: cardRepository.Card,
+    }: cardRepository.CardInsertData,
     cardFlag: string,
 ) {
 
@@ -67,7 +67,7 @@ export async function getCardById (cardId: number) {
     const transactions: paymentsRepository.Payment[] = await paymentsRepository.findByCardId(cardId);
     const recharges: rechargesRepository.Recharge[] = await rechargesRepository.findByCardId(cardId);
     
-    const balance: number = balanceCalculator(recharges, transactions);
+    const balance = balanceCalculator(recharges, transactions);
 
     return {
         balance,
@@ -79,7 +79,7 @@ export async function getCardById (cardId: number) {
 function balanceCalculator(
     recharges: rechargesRepository.Recharge[], 
     payments: paymentsRepository.Payment[],
-) {
+): number {
     const rechargesAmount: number = recharges.reduce((rechargesAmount, recharge) => (
         rechargesAmount + recharge.amount
     ), 0);
@@ -152,13 +152,13 @@ async function createHandleCardData(cardFlag: string) {
     return creditCard;
 }
 
-async function validateCardType(type: string, employeeId: number) {
+async function validateCardType(type: cardRepository.TransactionTypes, employeeId: number) {
     const arrayCardsTypes = [
         'groceries',
         'restaurant',
         'transport',
         'education',
-        'health'
+        'health',
     ];
 
     if (!arrayCardsTypes.includes(type)) {
