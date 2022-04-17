@@ -33,6 +33,7 @@ export async function insertPayments(
 
     const { balance } = await cardService.getCardOperationsById(originalCard.id);
     if (balance < amount) throw errors.badRequestError("insufficient balance");
+    if (card.isBlocked) throw errors.unauthorizedError("card");
 
     await paymentRepository.insert({
         cardId: originalCard.id, 
@@ -45,20 +46,22 @@ async function validatePaymentPOS (
     card: cardRepository.Card,
     password: string,
 ) {
-    if (card.isBlocked || card.isVirtual) throw errors.unauthorizedError("card");
+    if (card.isVirtual) throw errors.unauthorizedError("card");
     await encryptFunctions.compareEncrypted(password, card.password);
 
     return card;
 }
 
 async function validatePaymentOnline(
-    virtualCard: cardRepository.Card,
+    card: cardRepository.Card,
     cardData: cardRepository.CardDataToOnlinePayment,
 ) {
-    await cardService.findByCardDetails(cardData);
-    await encryptFunctions.compareEncrypted(cardData.securityCode, virtualCard.securityCode);
+    if (card.isVirtual) await cardService.findByCardDetails(cardData);
+    await encryptFunctions.compareEncrypted(cardData.securityCode, card.securityCode);
 
-    const originalCard = await cardService.findCardById(virtualCard.originalCardId);
+    if(!card.isVirtual) return card;
+
+    const originalCard = await cardService.findCardById(card.originalCardId);
     return originalCard;
 }
 
