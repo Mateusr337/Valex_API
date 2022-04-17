@@ -22,7 +22,7 @@ export async function createCards(
 
     const employee = await employeeService.findEmployeeById(employeeId);
     await validateCardType(type, employeeId);
-    validateVirtualCard(isVirtual, originalCardId);
+    validateVirtualCardRequest(isVirtual, originalCardId);
 
     if (cardFlag.toLowerCase() !== "mastercard") throw errors.badRequestError("cardFlag");
     const creditCardData = await createHandleCardData(cardFlag);
@@ -114,7 +114,7 @@ export async function findCardById(id: number) {
     return cardFound;
 }
 
-function validateVirtualCard(isVirtual: boolean, originalCardId: number) {
+function validateVirtualCardRequest(isVirtual: boolean, originalCardId: number) {
 
     if (isVirtual || originalCardId) {
         if (!isVirtual || !originalCardId) {
@@ -187,6 +187,7 @@ export async function findByCardDetails (
         cardholderName,
         expirationDate,
     );
+    if (!foundCard) throw errors.notFoundError("card");
     return foundCard;
 }
 
