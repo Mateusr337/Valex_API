@@ -40,7 +40,6 @@ export async function createVirtualCard(
     await encryptFunction.compareEncrypted(password, originalCard.password);
 
     const creditCardData = await createHandleCardData("mastercard");
-    delete(originalCard.id)
 
     await cardRepository.insert({
         employeeId: originalCard.employeeId,
@@ -195,6 +194,7 @@ export async function findByCardDetails (
         cardholderName,
         expirationDate,
     );
+    if (!foundCard) throw errors.notFoundError("card");
     return foundCard;
 }
 

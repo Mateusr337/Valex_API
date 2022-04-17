@@ -17,27 +17,52 @@ export async function insertPayments(
         businessId,
     } = payment;
 
-    if (cardData) await validateCardDataOnline(cardData);
     if (amount <= 0) throw errors.badRequestError('"amount" must be greater than zero');
     
     const card = await cardService.findCardById(cardId);
     await cardService.validateIsCardActive(card, false);
-    if (card.isBlocked) throw errors.unauthorizedError("card");
-    
-    if (!cardData) await encryptFunctions.compareEncrypted(password, card.password);
+
     await validateBusinessType(businessId, card);
 
-    const { balance } = await cardService.getCardOperationsById(cardId);
-    if (balance < amount) throw errors.badRequestError("insufficient balance");
+    let originalCard: cardRepository.Card;
+    if (cardData) {
+        originalCard = await validatePaymentOnline(card, cardData);
+    } else {
+        originalCard =  await validatePaymentPOS(card, password);
+    }
 
-    await paymentRepository.insert({ cardId, businessId, amount });
+    const { balance } = await cardService.getCardOperationsById(originalCard.id);
+    if (balance < amount) throw errors.badRequestError("insufficient balance");
+    if (card.isBlocked) throw errors.unauthorizedError("card");
+
+    await paymentRepository.insert({
+        cardId: originalCard.id, 
+        businessId, 
+        amount 
+    });
 }
 
-async function validateCardDataOnline(
+async function validatePaymentPOS (
+    card: cardRepository.Card,
+    password: string,
+) {
+    if (card.isVirtual) throw errors.unauthorizedError("card");
+    await encryptFunctions.compareEncrypted(password, card.password);
+
+    return card;
+}
+
+async function validatePaymentOnline(
+    card: cardRepository.Card,
     cardData: cardRepository.CardDataToOnlinePayment,
 ) {
-    const card = await cardService.findByCardDetails(cardData);
+    if (card.isVirtual) await cardService.findByCardDetails(cardData);
     await encryptFunctions.compareEncrypted(cardData.securityCode, card.securityCode);
+
+    if(!card.isVirtual) return card;
+
+    const originalCard = await cardService.findCardById(card.originalCardId);
+    return originalCard;
 }
 
 async function validateBusinessType (
