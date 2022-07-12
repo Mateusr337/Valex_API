@@ -1,10 +1,10 @@
 # Valex_API
 
-## About 
+## Sobre 
 
-backend application for employee benefit cards. The company can top up them, employees can buy them (online or physically), and people can see their balances.
+aplicativo de back-end para cartões de benefícios de funcionários. A empresa pode carregá-los, os funcionários podem comprá-los (online ou fisicamente) e as pessoas podem ver seus saldos.
 
-## Techonologies
+## Tecnologias
 
 <div>
   <img style='margin: 5px;' src="https://img.shields.io/badge/TypeScript%20-%2320232a.svg?&style=for-the-badge&color=3178C6&logo=typescript&logoColor=ffffff"/>
@@ -14,8 +14,15 @@ backend application for employee benefit cards. The company can top up them, emp
   <img style='margin: 5px;' src="https://img.shields.io/badge/PostgreSQL%20-%2320232a.svg?&style=for-the-badge&color=4169E1&logo=PostgreSQL&logoColor=ffffff"/>
 </div>
 
-## How to run
+## Inicialização
 
-- Firt clone this repository
-- run ```npm i ```
-- run ``` node src/index.js ```
+```bash
+# Clone esse repo:
+git clone https://github.com/Mateusr337/Valex_API.git
+
+# Intale as dependências:
+npm i
+
+# Execute:
+npm run start
+```
